@@ -1,0 +1,75 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: threat-modeling-backend
+  datasource:
+    # Faz 1: tek dosyalık SQLite. Oracle için url/driver/kullanıcı değiştirilir ve tm.db.dialect=oracle yapılır.
+    url: jdbc:sqlite:${tm.data-dir}/threat-modeling.db?journal_mode=WAL&busy_timeout=10000&foreign_keys=on
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 4
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 100MB
+  web:
+    resources:
+      # Frontend derlemesi (npm run build) varsa backend tarafından da sunulur.
+      static-locations: classpath:/static/, file:${tm.frontend-dist}/
+
+tm:
+  data-dir: ./data
+  datasets-dir: ../datasets
+  frontend-dist: ../frontend/dist
+  db:
+    dialect: sqlite            # sqlite | oracle | postgresql  (classpath:db/schema-{dialect}.sql)
+  pipeline:
+    worker-threads: 4
+    default-llm-mode: SERVER   # SERVER | BROWSER
+    browser-llm-enabled: true
+    model-extraction-max-chars-server: 60000
+    model-extraction-max-chars-browser: 8000
+    threat-batch-size-server: 12
+    threat-batch-size-browser: 4
+    retrieval-per-candidate: 4
+    retrieval-max-per-source: 2
+    temperature: 0.1
+  llm:
+    # mock: ağ erişimi gerektirmeyen deterministik sağlayıcı (demo/test)
+    # openai-compatible: kurum içi gen AI ortamı (OpenAI uyumlu /chat/completions)
+    provider: mock
+    base-url: http://genai.bank.local/v1
+    api-key: ${TM_LLM_API_KEY:}
+    model: kurum-ici-model
+    timeout-seconds: 120
+    structured-output-mode: JSON_SCHEMA   # JSON_SCHEMA | JSON_OBJECT | NONE
+    max-attempts: 2
+  embedding:
+    # Boş bırakılırsa RAG yalnızca BM25 ile çalışır. Doldurulursa hibrit (BM25 + vektör) arama yapılır.
+    base-url:
+    api-key: ${TM_EMBEDDING_API_KEY:}
+    model:
+  browser-llm:
+    # Tarayıcıda (WebLLM/WebGPU) çalışacak varsayılan model ve model dosyalarının kurum içi adresi.
+    default-model: Qwen2.5-3B-Instruct-q4f16_1-MLC
+    model-base-url:
+  # Yukarıdaki llm / embedding / browser-llm / pipeline değerleri ilk değerlerdir. "Sistem parametreleri" ekranından
+  # kaydedilen değerler veritabanında (app_setting) tutulur ve bunların yerine geçer.
+  security:
+    # API anahtarlarını veritabanında AES-256-GCM ile şifrelemek için parola. Canlıda kasadan ortam değişkeniyle verin.
+    settings-encryption-key: ${TM_SETTINGS_KEY:}
+    # Bulut erişimi yasak: ekrandan yalnızca localhost, özel IP'ler ve aşağıdaki iç alan adları girilebilir.
+    block-public-endpoints: true
+    internal-host-suffixes:
+      - .bank.local
+      - .local
+      - .internal
+      - .corp
+    # Sistem parametrelerini değiştirebilecek kullanıcılar (X-User / SSO kimliği). Boş liste = herkes (yalnızca geliştirme).
+    settings-admins: []
+
+logging:
+  level:
+    com.bank.tm: INFO
