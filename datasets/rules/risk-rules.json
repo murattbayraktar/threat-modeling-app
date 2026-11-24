@@ -1,0 +1,110 @@
+{
+  "version": "risk-rules-v1.0",
+  "description": "Risk ayarlama kuralları. Başlangıç değerleri (kural varsayılanları veya STRIDE varsayılanları) üzerine sırayla uygulanır. Operasyonlar: set (değeri ata), min (en az bu değer), max (en fazla bu değer), add (ekle/çıkar). Sonuç her zaman ölçek sınırları içine kırpılır. LLM'in önerdiği değerler bu hesaplamaya girmez; ayrı saklanır.",
+  "rules": [
+    {
+      "id": "RR-01",
+      "order": 10,
+      "enabled": true,
+      "description": "İnternete açık hedeflerde olasılık en az 4",
+      "rationale": "İnternetten erişilebilen bileşenler sürekli otomatik taramaya ve saldırıya maruz kalır.",
+      "when": { "any": [
+        { "fact": "element.internetFacing", "op": "isTrue" },
+        { "fact": "source.zone", "op": "eq", "value": "INTERNET" }
+      ] },
+      "then": { "likelihood": { "op": "min", "value": 4 } }
+    },
+    {
+      "id": "RR-02",
+      "order": 20,
+      "enabled": true,
+      "description": "Müşteri, kişisel veya finansal veri söz konusuysa etki en az 4",
+      "rationale": "Bu veri sınıflarının ifşası veya değiştirilmesi düzenleyici yükümlülük (KVKK) ve itibar kaybı doğurur.",
+      "when": { "fact": "element.relatedDataClasses", "op": "containsAny", "value": ["PII", "CUSTOMER", "FINANCIAL"] },
+      "then": { "impact": { "op": "min", "value": 4 } }
+    },
+    {
+      "id": "RR-03",
+      "order": 30,
+      "enabled": true,
+      "description": "Kart verisi veya kimlik bilgisi söz konusuysa etki 5",
+      "rationale": "Kart verisi (PCI DSS kapsamı) ve kimlik bilgileri doğrudan dolandırıcılık ve hesap ele geçirmeye yol açar.",
+      "when": { "fact": "element.relatedDataClasses", "op": "containsAny", "value": ["CARD", "CREDENTIAL"] },
+      "then": { "impact": { "op": "set", "value": 5 } }
+    },
+    {
+      "id": "RR-04",
+      "order": 40,
+      "enabled": true,
+      "description": "Güven sınırı geçen ve kimlik doğrulaması bilinmeyen akışlarda olasılık +1",
+      "rationale": "Kimlik doğrulamanın belgelenmemesi kontrolün eksik olma ihtimalini artırır.",
+      "when": { "all": [
+        { "fact": "element.crossesTrustBoundary", "op": "isTrue" },
+        { "fact": "element.authentication", "op": "in", "value": ["NONE", "UNKNOWN"] }
+      ] },
+      "then": { "likelihood": { "op": "add", "value": 1 } }
+    },
+    {
+      "id": "RR-05",
+      "order": 50,
+      "enabled": true,
+      "description": "Karşılıklı TLS kullanılan hedeflerde kimlik sahteciliği olasılığı en fazla 2",
+      "rationale": "mTLS istemci kimliğini kriptografik olarak doğrular.",
+      "when": { "all": [
+        { "fact": "threat.stride", "op": "eq", "value": "SPOOFING" },
+        { "fact": "element.authentication", "op": "eq", "value": "MTLS" }
+      ] },
+      "then": { "likelihood": { "op": "max", "value": 2 } }
+    },
+    {
+      "id": "RR-06",
+      "order": 60,
+      "enabled": true,
+      "description": "Şifreli akışlarda dinleme kaynaklı ifşa olasılığı en fazla 2",
+      "rationale": "İletim şifrelemesi belgelenmiş akışlarda pasif dinleme riski düşüktür.",
+      "when": { "all": [
+        { "fact": "threat.stride", "op": "eq", "value": "INFORMATION_DISCLOSURE" },
+        { "fact": "element.isFlow", "op": "isTrue" },
+        { "fact": "element.encrypted", "op": "isTrue" }
+      ] },
+      "then": { "likelihood": { "op": "max", "value": 2 } }
+    },
+    {
+      "id": "RR-07",
+      "order": 70,
+      "enabled": true,
+      "description": "Yalnızca iç ağda ve internete kapalı hedeflerde hizmet kesintisi olasılığı en fazla 2",
+      "rationale": "İç ağdaki, dışarıya kapalı bileşenler dış kaynaklı yük saldırılarına daha az açıktır.",
+      "when": { "all": [
+        { "fact": "threat.stride", "op": "eq", "value": "DENIAL_OF_SERVICE" },
+        { "fact": "element.zone", "op": "eq", "value": "INTERNAL" },
+        { "fact": "element.internetFacing", "op": "isFalse" }
+      ] },
+      "then": { "likelihood": { "op": "max", "value": 2 } }
+    },
+    {
+      "id": "RR-08",
+      "order": 80,
+      "enabled": true,
+      "description": "Çekirdek bankacılık sistemine yönelik değişiklik tehditlerinde etki 5",
+      "rationale": "Çekirdek sistemdeki yetkisiz değişiklik doğrudan finansal kayba yol açar.",
+      "when": { "all": [
+        { "fact": "threat.stride", "op": "in", "value": ["TAMPERING", "ELEVATION_OF_PRIVILEGE"] },
+        { "any": [
+          { "fact": "element.type", "op": "eq", "value": "CORE_BANKING" },
+          { "fact": "target.type", "op": "eq", "value": "CORE_BANKING" }
+        ] }
+      ] },
+      "then": { "impact": { "op": "set", "value": 5 } }
+    },
+    {
+      "id": "RR-09",
+      "order": 90,
+      "enabled": true,
+      "description": "Üçüncü taraf kaynaklı akışlarda olasılık en az 3",
+      "rationale": "Üçüncü taraf sistemlerin güvenlik seviyesi bankanın kontrolünde değildir.",
+      "when": { "fact": "source.zone", "op": "eq", "value": "THIRD_PARTY" },
+      "then": { "likelihood": { "op": "min", "value": 3 } }
+    }
+  ]
+}

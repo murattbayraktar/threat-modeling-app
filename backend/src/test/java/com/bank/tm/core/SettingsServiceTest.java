@@ -3,6 +3,7 @@ package com.bank.tm.core;
 import com.bank.tm.core.llm.LlmTask;
 import com.bank.tm.core.llm.MockLlmClient;
 import com.bank.tm.core.settings.EndpointPolicy;
+import com.bank.tm.core.settings.ModelCatalog;
 import com.bank.tm.core.settings.SecretCipher;
 import com.bank.tm.core.settings.SettingsService;
 import com.bank.tm.core.settings.SwitchableEmbeddingProvider;
@@ -123,5 +124,73 @@ class SettingsServiceTest {
                         6, p.threatBatchSizeBrowser(), 3, p.retrievalMaxPerSource())), "admin");
         assertEquals(6, core.settings().threatBatchSizeServer());
         assertEquals(3, core.settings().retrievalPerCandidate());
+    }
+
+    @Test
+    void publicEndpointsAreAllowedByDefaultAndFlaggedExternal() {
+        EndpointPolicy open = new EndpointPolicy(false, List.of(".bank.local"));
+        open.check("LLM", "https://api.openai.com/v1");
+        assertFalse(open.isInternal("api.openai.com"));
+        assertThrows(IllegalArgumentException.class, () -> open.check("LLM", "ftp://api.openai.com"));
+    }
+
+    @Test
+    void taskConnectionUsesOwnKeyAndNeverLeaksDefaultKey() throws Exception {
+        InMemoryReviewStore store = new InMemoryReviewStore();
+        SwitchableLlmClient llm = new SwitchableLlmClient(new MockLlmClient());
+        SettingsService svc = new SettingsService(store, SystemSettings.defaults(), new SecretCipher("k"),
+                new EndpointPolicy(false, List.of()), llm, new SwitchableEmbeddingProvider(null), true);
+        SystemSettings s = svc.current();
+        Map<String, SystemSettings.TaskConnection> conns = new java.util.LinkedHashMap<>();
+        conns.put("DOCUMENT_VISION", new SystemSettings.TaskConnection("https://api.openai.com/v1", "sk-dis-anahtar-9876"));
+        SystemSettings draft = s.withLlm(new SystemSettings.Llm(SystemSettings.PROVIDER_OPENAI, "https://genai.bank.local/v1",
+                "sk-ic-anahtar-1234", "ic-model", 60, "JSON_SCHEMA", 2,
+                Map.of("DOCUMENT_VISION", "gpt-luna", "THREAT_GENERATION", "ucuz-model"), conns));
+        SettingsService.View v = svc.update(draft, "admin");
+
+        assertEquals("ic-model", llm.forTask(LlmTask.MODEL_EXTRACTION).model());
+        assertEquals("ucuz-model", llm.forTask(LlmTask.THREAT_GENERATION).model());
+        assertEquals("gpt-luna", llm.forTask(LlmTask.DOCUMENT_VISION).model());
+        assertEquals("", v.settings().llm().taskConnections().get("DOCUMENT_VISION").apiKey(), "adım anahtarı ekrana dönmemeli");
+        assertEquals("••••9876", v.secrets().get("llm.task.DOCUMENT_VISION.apiKey").hint());
+        String stored = store.getSetting(SettingsService.KEY).orElseThrow();
+        assertFalse(stored.contains("sk-dis-anahtar-9876"));
+        assertFalse(svc.history(5).stream().anyMatch(c -> c.summary().contains("sk-dis-anahtar-9876")));
+
+        // Boş gönderilen adım anahtarı korunur; yeniden açılışta çözülür
+        SystemSettings again = v.settings().withLlm(new SystemSettings.Llm(SystemSettings.PROVIDER_OPENAI, "https://genai.bank.local/v1",
+                "", "ic-model", 60, "JSON_SCHEMA", 2, v.settings().llm().taskModels(), v.settings().llm().taskConnections()));
+        svc.update(again, "admin");
+        assertEquals("sk-dis-anahtar-9876", svc.current().llm().taskConnections().get("DOCUMENT_VISION").apiKey());
+        SettingsService reopened = new SettingsService(store, SystemSettings.defaults(), new SecretCipher("k"),
+                new EndpointPolicy(false, List.of()), new SwitchableLlmClient(new MockLlmClient()), new SwitchableEmbeddingProvider(null), true);
+        assertEquals("sk-dis-anahtar-9876", reopened.current().llm().taskConnections().get("DOCUMENT_VISION").apiKey());
+        assertEquals("sk-ic-anahtar-1234", reopened.current().llm().apiKey());
+    }
+
+    @Test
+    void listModelsReadsOpenAiStyleCatalog() throws Exception {
+        com.sun.net.httpserver.HttpServer server = com.sun.net.httpserver.HttpServer.create(new java.net.InetSocketAddress("127.0.0.1", 0), 0);
+        String[] auth = new String[1];
+        server.createContext("/v1/models", ex -> {
+            auth[0] = ex.getRequestHeaders().getFirst("Authorization");
+            byte[] b = "{\"object\":\"list\",\"data\":[{\"id\":\"gpt-b\"},{\"id\":\"GPT-a\"},{\"id\":\"gpt-b\"}]}".getBytes();
+            ex.sendResponseHeaders(200, b.length);
+            ex.getResponseBody().write(b);
+            ex.close();
+        });
+        server.start();
+        try {
+            SettingsService svc = new SettingsService(new InMemoryReviewStore(), SystemSettings.defaults(), new SecretCipher(null),
+                    new EndpointPolicy(false, List.of()), new SwitchableLlmClient(new MockLlmClient()), new SwitchableEmbeddingProvider(null), true);
+            String url = "http://127.0.0.1:" + server.getAddress().getPort() + "/v1";
+            ModelCatalog.Result r = svc.listModels(openAi(svc.current(), url, "tok-1", "x", Map.of()), null);
+            assertEquals(List.of("GPT-a", "gpt-b"), r.models());
+            assertFalse(r.external());
+            assertEquals("Bearer tok-1", auth[0]);
+            assertEquals(List.of("a", "b"), ModelCatalog.parse(com.bank.tm.core.util.Json.tree("[\"b\",{\"name\":\"a\"}]")));
+        } finally {
+            server.stop(0);
+        }
     }
 }

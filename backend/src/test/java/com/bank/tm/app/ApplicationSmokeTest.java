@@ -35,11 +35,12 @@ class ApplicationSmokeTest {
     }
 
     @Test
-    void settingsEndpointsMaskSecretsAndBlockCloud() throws Exception {
+    void settingsEndpointsMaskSecretsAndValidateUrls() throws Exception {
         mvc.perform(get("/api/settings")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.settings.llm.apiKey").value(""))
-                .andExpect(jsonPath("$.policy.blockPublicEndpoints").value(true));
-        String cloud = SETTINGS.replace("\"enabled\":false,\"baseUrl\":\"\"", "\"enabled\":true,\"baseUrl\":\"https://api.openai.com/v1\"")
+                .andExpect(jsonPath("$.policy.blockPublicEndpoints").value(false));
+        // Dış adresler serbest (PoC); geçersiz şema reddedilir
+        String cloud = SETTINGS.replace("\"enabled\":false,\"baseUrl\":\"\"", "\"enabled\":true,\"baseUrl\":\"ftp://genai.bank.local/v1\"")
                 .replace("\"model\":\"\"}", "\"model\":\"text-embedding-3-small\"}");
         mvc.perform(put("/api/settings").contentType("application/json").content(cloud)).andExpect(status().isBadRequest());
         mvc.perform(put("/api/settings").contentType("application/json").content(SETTINGS)).andExpect(status().isOk())

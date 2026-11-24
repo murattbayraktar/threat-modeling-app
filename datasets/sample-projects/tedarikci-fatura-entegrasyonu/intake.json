@@ -1,0 +1,8 @@
+{
+  "title": "Tedarikçi fatura entegrasyonu",
+  "businessUnit": "Satın Alma",
+  "projectType": "INTEGRATION",
+  "dataClassification": "GIZLI",
+  "owner": "Proje sahibi (örnek)",
+  "answers": { "internetFacing": true, "personalData": true, "thirdParty": true, "authMethod": "OAUTH2" }
+}

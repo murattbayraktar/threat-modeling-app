@@ -70,6 +70,30 @@ public class SettingsController {
         return core.systemSettings.test(draft, target);
     }
 
+    /** Taslaktaki bağlantıdan tanımlı modelleri getirir (kaydetmeden). task: adım adı; boşsa varsayılan bağlantı. */
+    @PostMapping("/models")
+    public Map<String, Object> models(@RequestParam(value = "task", required = false) String task, @RequestBody SystemSettings draft,
+                                      @RequestHeader(value = "X-User", required = false) String user) {
+        requireAdmin(user);
+        Map<String, Object> m = new LinkedHashMap<>();
+        try {
+            var r = core.systemSettings.listModels(draft, task);
+            m.put("ok", true);
+            m.put("models", r.models());
+            m.put("host", r.host());
+            m.put("external", r.external());
+        } catch (IllegalArgumentException e) {
+            m.put("ok", false);
+            m.put("models", List.of());
+            m.put("message", e.getMessage());
+        } catch (Exception e) {
+            m.put("ok", false);
+            m.put("models", List.of());
+            m.put("message", e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
+        }
+        return m;
+    }
+
     @GetMapping("/history")
     public List<ReviewStore.SettingChange> history(@RequestParam(value = "limit", defaultValue = "30") int limit) {
         return core.systemSettings.history(Math.min(Math.max(limit, 1), 200));

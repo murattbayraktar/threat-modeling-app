@@ -29,6 +29,7 @@ public class MockLlmClient implements LlmClient {
                 yield HeuristicModelExtractor.extract(docs, name);
             }
             case THREAT_GENERATION -> MockThreatGenerator.generate(request.input());
+            case DOCUMENT_VISION -> throw new UnsupportedOperationException("Mock sağlayıcı görsel analiz yapmaz");
         };
         return new LlmResponse(Json.write(output), model(), System.currentTimeMillis() - start);
     }

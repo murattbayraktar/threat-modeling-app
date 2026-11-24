@@ -39,7 +39,7 @@ public record TmProperties(
 
     /**
      * settingsEncryptionKey: API anahtarlarını veritabanında şifrelemek için parola (ortam değişkeni / kasa).
-     * blockPublicEndpoints + internalHostSuffixes: ekrandan yalnızca kurum içi adres girilebilir.
+     * blockPublicEndpoints (varsayılan false) + internalHostSuffixes: true ise ekrandan yalnızca kurum içi adres girilebilir.
      * settingsAdmins: sistem parametrelerini değiştirebilecek kullanıcılar (boşsa herkes; yalnızca geliştirme için).
      */
     public record Security(String settingsEncryptionKey, Boolean blockPublicEndpoints, List<String> internalHostSuffixes,

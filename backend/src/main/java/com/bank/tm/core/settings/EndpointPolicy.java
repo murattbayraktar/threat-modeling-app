@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * "Hiçbir akışta bulut erişimi olmaz" kuralının uygulandığı yer. Ekrandan girilen LLM / embedding adresleri
- * yalnızca kurum içi kabul edilen hostlara izin verir: localhost, özel IP aralıkları ve yöneticinin
- * application.yml'de tanımladığı iç alan adı sonekleri (tm.security.internal-host-suffixes).
- * Bu liste bilinçli olarak ekrandan değiştirilemez; politikayı gevşetmek yapılandırma değişikliği gerektirir.
+ * Ekrandan girilen LLM / embedding adreslerinin denetimi. Her zaman adres biçimi (http/https, host) doğrulanır.
+ * blockPublic=true (tm.security.block-public-endpoints) ise ek olarak yalnızca kurum içi hostlara izin verilir:
+ * localhost, özel IP aralıkları ve tm.security.internal-host-suffixes. PoC için varsayılan kapalıdır; dış adresler
+ * serbesttir ve arayüzde "dış erişim" olarak işaretlenir. Canlıda yapılandırmadan açılabilir.
  */
 public final class EndpointPolicy {
 

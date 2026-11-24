@@ -72,7 +72,7 @@ public class CoreConfig {
                 new SystemSettings.BrowserLlm(p.browserLlmEnabled(), b == null ? "" : nz(b.defaultModel()), "/webllm-config.json"));
         TmProperties.Security sec = props.security();
         SecretCipher cipher = new SecretCipher(sec == null ? null : sec.settingsEncryptionKey());
-        EndpointPolicy policy = new EndpointPolicy(sec == null || sec.blockPublicEndpoints() == null || sec.blockPublicEndpoints(),
+        EndpointPolicy policy = new EndpointPolicy(sec != null && Boolean.TRUE.equals(sec.blockPublicEndpoints()),
                 sec == null || sec.internalHostSuffixes() == null ? List.of() : sec.internalHostSuffixes());
         Path data = Path.of(props.dataDir());
         return TmCore.create(new TmCore.Config(Path.of(props.datasetsDir()).toAbsolutePath().normalize(),

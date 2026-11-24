@@ -1,0 +1,8 @@
+{
+  "title": "Mobil şube randevu servisi",
+  "businessUnit": "Dijital Kanallar",
+  "projectType": "NEW_APPLICATION",
+  "dataClassification": "KISISEL",
+  "owner": "Proje sahibi (örnek)",
+  "answers": { "internetFacing": true, "personalData": true, "thirdParty": true, "authMethod": "JWT" }
+}

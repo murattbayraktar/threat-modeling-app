@@ -1,0 +1,372 @@
+{
+  "version": "stride-v1.0",
+  "description": "STRIDE-per-element ve bağlamsal aday tehdit kuralları. Her kural sistem modelindeki bir bileşen (COMPONENT) veya veri akışı (DATA_FLOW) için değerlendirilir; koşul sağlanırsa aday tehdit üretilir. Koşul dili ve kullanılabilir fact'ler için docs/kural-motoru.md dosyasına bakın.",
+  "rules": [
+    {
+      "id": "TR-C-S-01",
+      "enabled": true,
+      "appliesTo": "COMPONENT",
+      "stride": "SPOOFING",
+      "title": "İnternete açık süreçte kimlik sahteciliği",
+      "titleTemplate": "{element.name} üzerinde kullanıcı/istemci kimliğinin taklit edilmesi",
+      "descriptionTemplate": "{element.name} internete açık olduğu için saldırgan çalınmış veya tahmin edilmiş kimlik bilgileriyle meşru bir kullanıcı ya da istemci gibi davranabilir.",
+      "defaultLikelihood": 3,
+      "defaultImpact": 4,
+      "ragQuery": "kimlik doğrulama oturum yönetimi çok faktörlü kimlik doğrulama kimlik sahteciliği",
+      "tags": ["owasp:A07", "api:API2"],
+      "when": { "all": [
+        { "fact": "element.kind", "op": "eq", "value": "PROCESS" },
+        { "fact": "element.internetFacing", "op": "isTrue" }
+      ] }
+    },
+    {
+      "id": "TR-C-S-02",
+      "enabled": true,
+      "appliesTo": "COMPONENT",
+      "stride": "SPOOFING",
+      "title": "Kimlik doğrulaması tanımsız servis",
+      "titleTemplate": "{element.name} için kimlik doğrulama tanımlı değil",
+      "descriptionTemplate": "Dokümanda {element.name} için kimlik doğrulama yöntemi belirtilmemiş veya hiç yok. Servise erişebilen herhangi bir taraf yetkisiz istek gönderebilir.",
+      "defaultLikelihood": 4,
+      "defaultImpact": 4,
+      "ragQuery": "servis kimlik doğrulama mTLS OAuth token doğrulama yetkisiz erişim",
+      "tags": ["owasp:A07", "api:API2"],
+      "when": { "all": [
+        { "fact": "element.kind", "op": "eq", "value": "PROCESS" },
+        { "fact": "element.type", "op": "in", "value": ["API", "API_GATEWAY", "SERVICE", "WEB_APP"] },
+        { "fact": "element.authentication", "op": "in", "value": ["NONE", "UNKNOWN"] }
+      ] }
+    },
+    {
+      "id": "TR-C-S-03",
+      "enabled": true,
+      "appliesTo": "COMPONENT",
+      "stride": "SPOOFING",
+      "title": "Dış varlığın taklit edilmesi",
+      "titleTemplate": "{element.name} kimliğine bürünülmesi",
+      "descriptionTemplate": "{element.name} sistem dışındaki bir taraftır. Saldırgan bu tarafın kimliğine bürünerek sisteme sahte istek veya veri gönderebilir.",
+      "defaultLikelihood": 3,
+      "defaultImpact": 3,
+      "ragQuery": "dış sistem kimlik doğrulama karşılıklı TLS istemci sertifikası tedarikçi entegrasyonu",
+      "tags": ["stride:S"],
+      "when": { "fact": "element.kind", "op": "eq", "value": "EXTERNAL_ENTITY" }
+    },
+    {
+      "id": "TR-C-R-01",
+      "enabled": true,
+      "appliesTo": "COMPONENT",
+      "stride": "REPUDIATION",
+      "title": "Dış varlık işlemlerinin inkârı",
+      "titleTemplate": "{element.name} tarafından yapılan işlemlerin inkâr edilmesi",
+      "descriptionTemplate": "{element.name} tarafından başlatılan işlemler kimlikle ilişkilendirilmiş ve değiştirilemez biçimde kaydedilmezse işlemin kim tarafından yapıldığı ispatlanamaz.",
+      "defaultLikelihood": 2,
+      "defaultImpact": 3,
+      "ragQuery": "denetim kaydı loglama inkâr edilemezlik işlem izi",
+      "tags": ["owasp:A09"],
+      "when": { "fact": "element.kind", "op": "eq", "value": "EXTERNAL_ENTITY" }
+    },
+    {
+      "id": "TR-C-R-02",
+      "enabled": true,
+      "appliesTo": "COMPONENT",
+      "stride": "REPUDIATION",
+      "title": "Finansal işlemlerde yetersiz denetim kaydı",
+      "titleTemplate": "{element.name} üzerindeki finansal işlemlerin izlenememesi",
+      "descriptionTemplate": "{element.name} finansal veri veya işlem talimatı işliyor. Onay ve değişiklik adımları kullanıcıyla ilişkilendirilmiş, değiştirilemez kayıtlarla tutulmazsa hatalı veya kötü niyetli işlemin sorumlusu belirlenemez.",
+      "defaultLikelihood": 3,
+      "defaultImpact": 4,
+      "ragQuery": "finansal işlem denetim kaydı değiştirilemez log dört göz onayı",
+      "tags": ["owasp:A09"],
+      "when": { "all": [
+        { "fact": "element.kind", "op": "eq", "value": "PROCESS" },
+        { "any": [
+          { "fact": "element.dataClasses", "op": "containsAny", "value": ["FINANCIAL", "CARD"] },
+          { "fact": "element.type", "op": "eq", "value": "CORE_BANKING" }
+        ] }
+      ] }
+    },
+    {
+      "id": "TR-C-T-01",
+      "enabled": true,
+      "appliesTo": "COMPONENT",
+      "stride": "TAMPERING",
+      "title": "İnternete açık süreçte girdi manipülasyonu",
+      "titleTemplate": "{element.name} üzerinde girdi manipülasyonu ve enjeksiyon",
+      "descriptionTemplate": "{element.name} dışarıdan girdi alıyor. Girdi doğrulaması yetersizse saldırgan parametreleri değiştirerek iş mantığını atlatabilir veya enjeksiyon saldırısı yapabilir.",
+      "defaultLikelihood": 3,
+      "defaultImpact": 4,
+      "ragQuery": "girdi doğrulama enjeksiyon parametre manipülasyonu",
+      "tags": ["owasp:A03", "cwe:20"],
+      "when": { "all": [
+        { "fact": "element.kind", "op": "eq", "value": "PROCESS" },
+        { "fact": "element.internetFacing", "op": "isTrue" }
+      ] }
+    },
+    {
+      "id": "TR-C-T-02",
+      "enabled": true,
+      "appliesTo": "COMPONENT",
+      "stride": "TAMPERING",
+      "title": "Veri deposunda yetkisiz değişiklik",
+      "titleTemplate": "{element.name} verilerinin yetkisiz değiştirilmesi",
+      "descriptionTemplate": "{element.name} üzerindeki kayıtlar yetkisiz bir hesap veya ele geçirilmiş bir servis tarafından değiştirilebilir; bu durum işlem sonuçlarını bozabilir.",
+      "defaultLikelihood": 2,
+      "defaultImpact": 4,
+      "ragQuery": "veritabanı en az yetki servis hesabı bütünlük değişiklik kaydı",
+      "tags": ["stride:T"],
+      "when": { "fact": "element.kind", "op": "eq", "value": "DATA_STORE" }
+    },
+    {
+      "id": "TR-C-T-03",
+      "enabled": true,
+      "appliesTo": "COMPONENT",
+      "stride": "TAMPERING",
+      "title": "Zararlı dosya yüklenmesi",
+      "titleTemplate": "{element.name} üzerinden zararlı dosya yüklenmesi",
+      "descriptionTemplate": "{element.name} dışarıdan dosya kabul ediyor veya saklıyor. Dosya türü ve içerik kontrolü yapılmazsa zararlı içerik iç sistemlere taşınabilir.",
+      "defaultLikelihood": 3,
+      "defaultImpact": 4,
+      "ragQuery": "dosya yükleme tür kontrolü antivirüs taraması karantina",
+      "tags": ["owasp:A04", "cwe:434"],
+      "when": { "fact": "element.type", "op": "eq", "value": "FILE_STORAGE" }
+    },
+    {
+      "id": "TR-C-I-01",
+      "enabled": true,
+      "appliesTo": "COMPONENT",
+      "stride": "INFORMATION_DISCLOSURE",
+      "title": "Veri deposunda hassas veri ifşası",
+      "titleTemplate": "{element.name} üzerindeki hassas verinin ifşası",
+      "descriptionTemplate": "{element.name} müşteri, kişisel veya finansal veri saklıyor. Erişim kontrolü, saklama düzeyinde şifreleme veya maskeleme yetersizse veri yetkisiz kişilerce okunabilir.",
+      "defaultLikelihood": 3,
+      "defaultImpact": 5,
+      "ragQuery": "hassas veri saklama şifreleme maskeleme veritabanı erişim kontrolü KVKK",
+      "tags": ["owasp:A02", "cwe:311"],
+      "when": { "all": [
+        { "fact": "element.kind", "op": "eq", "value": "DATA_STORE" },
+        { "fact": "element.dataClasses", "op": "containsAny", "value": ["PII", "CUSTOMER", "FINANCIAL", "CARD", "CREDENTIAL"] }
+      ] }
+    },
+    {
+      "id": "TR-C-I-02",
+      "enabled": true,
+      "appliesTo": "COMPONENT",
+      "stride": "INFORMATION_DISCLOSURE",
+      "title": "Ayrıntılı hata mesajlarıyla bilgi sızıntısı",
+      "titleTemplate": "{element.name} yanıtlarından iç bilgi sızması",
+      "descriptionTemplate": "{element.name} internete açık. Ayrıntılı hata mesajları, yığın izleri veya gereğinden fazla alan dönen yanıtlar iç yapı ve veri hakkında bilgi sızdırabilir.",
+      "defaultLikelihood": 3,
+      "defaultImpact": 3,
+      "ragQuery": "hata yönetimi ayrıntılı hata mesajı aşırı veri dönme güvenlik yanlış yapılandırması",
+      "tags": ["owasp:A05", "api:API3"],
+      "when": { "all": [
+        { "fact": "element.kind", "op": "eq", "value": "PROCESS" },
+        { "fact": "element.internetFacing", "op": "isTrue" }
+      ] }
+    },
+    {
+      "id": "TR-C-I-03",
+      "enabled": true,
+      "appliesTo": "COMPONENT",
+      "stride": "INFORMATION_DISCLOSURE",
+      "title": "Nesne düzeyinde yetki eksikliği (BOLA)",
+      "titleTemplate": "{element.name} üzerinden başka müşterilerin kayıtlarına erişim",
+      "descriptionTemplate": "{element.name} hassas veri dönen uç noktalar sunuyor. Her istekte kaydın istemciye ait olup olmadığı kontrol edilmezse kimlik numarası değiştirilerek başka kayıtlar okunabilir.",
+      "defaultLikelihood": 4,
+      "defaultImpact": 5,
+      "ragQuery": "nesne düzeyinde yetkilendirme BOLA IDOR kayıt sahipliği kontrolü",
+      "tags": ["api:API1", "owasp:A01"],
+      "when": { "all": [
+        { "fact": "element.type", "op": "in", "value": ["API", "API_GATEWAY", "WEB_APP"] },
+        { "fact": "element.relatedDataClasses", "op": "containsAny", "value": ["PII", "CUSTOMER", "FINANCIAL", "CARD"] }
+      ] }
+    },
+    {
+      "id": "TR-C-D-01",
+      "enabled": true,
+      "appliesTo": "COMPONENT",
+      "stride": "DENIAL_OF_SERVICE",
+      "title": "İnternete açık süreçte kaynak tüketimi",
+      "titleTemplate": "{element.name} üzerinde aşırı istekle hizmet kesintisi",
+      "descriptionTemplate": "{element.name} internete açık. Hız sınırı, boyut limiti veya zaman aşımı yoksa yoğun ya da büyük istekler hizmeti durdurabilir.",
+      "defaultLikelihood": 3,
+      "defaultImpact": 3,
+      "ragQuery": "hız sınırı kaynak tüketimi istek boyutu limiti DDoS koruması",
+      "tags": ["api:API4"],
+      "when": { "all": [
+        { "fact": "element.kind", "op": "eq", "value": "PROCESS" },
+        { "fact": "element.internetFacing", "op": "isTrue" }
+      ] }
+    },
+    {
+      "id": "TR-C-D-02",
+      "enabled": true,
+      "appliesTo": "COMPONENT",
+      "stride": "DENIAL_OF_SERVICE",
+      "title": "Mesaj kuyruğunun taşması",
+      "titleTemplate": "{element.name} kuyruğunun dolması ve işlemlerin gecikmesi",
+      "descriptionTemplate": "{element.name} üzerinde tüketici yavaşladığında veya kötü niyetli yoğun mesaj gönderildiğinde kuyruk dolabilir ve bağlı işlemler durabilir.",
+      "defaultLikelihood": 2,
+      "defaultImpact": 3,
+      "ragQuery": "mesaj kuyruğu kapasite izleme dead letter queue hız sınırı",
+      "tags": ["stride:D"],
+      "when": { "fact": "element.type", "op": "eq", "value": "MESSAGE_QUEUE" }
+    },
+    {
+      "id": "TR-C-E-01",
+      "enabled": true,
+      "appliesTo": "COMPONENT",
+      "stride": "ELEVATION_OF_PRIVILEGE",
+      "title": "Fonksiyon düzeyinde yetki eksikliği",
+      "titleTemplate": "{element.name} üzerinde yetkisiz fonksiyonlara erişim",
+      "descriptionTemplate": "{element.name} rol ve fonksiyon bazında yetki kontrolü yapmazsa düşük yetkili bir kullanıcı veya istemci yönetim ya da onay fonksiyonlarını çağırabilir.",
+      "defaultLikelihood": 3,
+      "defaultImpact": 4,
+      "ragQuery": "rol bazlı yetkilendirme fonksiyon düzeyinde yetki en az yetki",
+      "tags": ["api:API5", "owasp:A01"],
+      "when": { "all": [
+        { "fact": "element.kind", "op": "eq", "value": "PROCESS" },
+        { "fact": "element.type", "op": "in", "value": ["API", "API_GATEWAY", "SERVICE", "WEB_APP"] }
+      ] }
+    },
+    {
+      "id": "TR-C-E-02",
+      "enabled": true,
+      "appliesTo": "COMPONENT",
+      "stride": "ELEVATION_OF_PRIVILEGE",
+      "title": "Yüksek yetkili servis hesabının kötüye kullanımı",
+      "titleTemplate": "{element.name} servis hesabının ele geçirilerek yetki yükseltilmesi",
+      "descriptionTemplate": "{element.name} geniş yetkili bir servis hesabıyla çalışıyorsa hesabın ele geçirilmesi bağlı tüm sistemlerde yetki kazanılması anlamına gelir.",
+      "defaultLikelihood": 2,
+      "defaultImpact": 4,
+      "ragQuery": "servis hesabı en az yetki sır yönetimi kasası parola rotasyonu",
+      "tags": ["stride:E"],
+      "when": { "any": [
+        { "fact": "element.type", "op": "eq", "value": "BATCH_JOB" },
+        { "fact": "element.authentication", "op": "eq", "value": "SERVICE_ACCOUNT" }
+      ] }
+    },
+    {
+      "id": "TR-F-S-01",
+      "enabled": true,
+      "appliesTo": "DATA_FLOW",
+      "stride": "SPOOFING",
+      "title": "Güven sınırı geçen akışta kaynak kimliği doğrulanmıyor",
+      "titleTemplate": "{source.name} → {target.name} akışında kaynağın kimliğinin doğrulanmaması",
+      "descriptionTemplate": "Bu akış güven sınırını geçiyor ancak kimlik doğrulama yöntemi belirtilmemiş. {target.name}, isteğin gerçekten {source.name} üzerinden geldiğini doğrulayamazsa sahte istek kabul edebilir.",
+      "defaultLikelihood": 4,
+      "defaultImpact": 4,
+      "ragQuery": "servisler arası kimlik doğrulama mTLS imzalı token ağ segmentasyonu",
+      "tags": ["owasp:A07"],
+      "when": { "all": [
+        { "fact": "element.crossesTrustBoundary", "op": "isTrue" },
+        { "fact": "element.authentication", "op": "in", "value": ["NONE", "UNKNOWN"] }
+      ] }
+    },
+    {
+      "id": "TR-F-T-01",
+      "enabled": true,
+      "appliesTo": "DATA_FLOW",
+      "stride": "TAMPERING",
+      "title": "Güven sınırı geçen akışta veri değiştirme",
+      "titleTemplate": "{source.name} → {target.name} akışında verinin yolda değiştirilmesi",
+      "descriptionTemplate": "Akış güven sınırını geçiyor ve şifreleme/bütünlük koruması doğrulanmamış. Araya giren bir saldırgan mesaj içeriğini değiştirebilir.",
+      "defaultLikelihood": 3,
+      "defaultImpact": 4,
+      "ragQuery": "iletim güvenliği TLS mesaj bütünlüğü imza",
+      "tags": ["owasp:A02", "owasp:A08"],
+      "when": { "all": [
+        { "fact": "element.crossesTrustBoundary", "op": "isTrue" },
+        { "fact": "element.encrypted", "op": "ne", "value": true }
+      ] }
+    },
+    {
+      "id": "TR-F-T-02",
+      "enabled": true,
+      "appliesTo": "DATA_FLOW",
+      "stride": "TAMPERING",
+      "title": "SQL enjeksiyonu",
+      "titleTemplate": "{source.name} üzerinden {target.name} veritabanına SQL enjeksiyonu",
+      "descriptionTemplate": "{source.name} veritabanına sorgu gönderiyor. Kullanıcı girdisi sorguya doğrudan eklenirse saldırgan sorguyu değiştirerek veri okuyabilir veya değiştirebilir.",
+      "defaultLikelihood": 3,
+      "defaultImpact": 5,
+      "ragQuery": "SQL enjeksiyonu parametreli sorgu ORM girdi doğrulama",
+      "tags": ["owasp:A03", "cwe:89"],
+      "when": { "all": [
+        { "fact": "target.type", "op": "eq", "value": "DATABASE" },
+        { "fact": "source.kind", "op": "eq", "value": "PROCESS" }
+      ] }
+    },
+    {
+      "id": "TR-F-T-03",
+      "enabled": true,
+      "appliesTo": "DATA_FLOW",
+      "stride": "TAMPERING",
+      "title": "Çekirdek sisteme giden talimatın bütünlüğü",
+      "titleTemplate": "{source.name} → {target.name} talimatının bütünlüğünün bozulması",
+      "descriptionTemplate": "{target.name} çekirdek bankacılık/muhasebe sistemidir. Onaylanmış bir talimatın tutar, alıcı veya hesap bilgisi iletim ya da ara katmanda değiştirilirse onaysız işlem gerçekleşebilir.",
+      "defaultLikelihood": 2,
+      "defaultImpact": 5,
+      "ragQuery": "ödeme talimatı bütünlük imza dört göz onayı mutabakat",
+      "tags": ["stride:T"],
+      "when": { "fact": "target.type", "op": "eq", "value": "CORE_BANKING" }
+    },
+    {
+      "id": "TR-F-I-01",
+      "enabled": true,
+      "appliesTo": "DATA_FLOW",
+      "stride": "INFORMATION_DISCLOSURE",
+      "title": "Hassas verinin şifresiz iletimi",
+      "titleTemplate": "{source.name} → {target.name} akışında hassas verinin şifresiz iletilmesi",
+      "descriptionTemplate": "Akış hassas veri taşıyor ve iletim şifrelemesi yok veya doğrulanmamış. Ağ trafiğini izleyebilen bir taraf veriyi okuyabilir.",
+      "defaultLikelihood": 3,
+      "defaultImpact": 4,
+      "ragQuery": "iletim şifrelemesi TLS hassas veri KVKK",
+      "tags": ["owasp:A02", "cwe:319"],
+      "when": { "all": [
+        { "any": [
+          { "fact": "element.encrypted", "op": "isFalse" },
+          { "all": [
+            { "fact": "element.encrypted", "op": "isNull" },
+            { "fact": "element.crossesTrustBoundary", "op": "isTrue" }
+          ] }
+        ] },
+        { "fact": "element.relatedDataClasses", "op": "containsAny", "value": ["PII", "CUSTOMER", "FINANCIAL", "CARD", "CREDENTIAL"] }
+      ] }
+    },
+    {
+      "id": "TR-F-R-01",
+      "enabled": true,
+      "appliesTo": "DATA_FLOW",
+      "stride": "REPUDIATION",
+      "title": "Dış kaynaklı finansal işlemin inkârı",
+      "titleTemplate": "{source.name} kaynaklı finansal işlemin inkâr edilmesi",
+      "descriptionTemplate": "Finansal veri dış bir kaynaktan geliyor. İstek imzası, zaman damgası ve kaynak kimliği saklanmazsa karşı taraf işlemi gönderdiğini inkâr edebilir.",
+      "defaultLikelihood": 2,
+      "defaultImpact": 4,
+      "ragQuery": "inkâr edilemezlik istek imzası zaman damgası denetim kaydı",
+      "tags": ["owasp:A09"],
+      "when": { "all": [
+        { "fact": "source.zone", "op": "in", "value": ["INTERNET", "THIRD_PARTY"] },
+        { "fact": "element.relatedDataClasses", "op": "containsAny", "value": ["FINANCIAL", "CARD"] }
+      ] }
+    },
+    {
+      "id": "TR-F-D-01",
+      "enabled": true,
+      "appliesTo": "DATA_FLOW",
+      "stride": "DENIAL_OF_SERVICE",
+      "title": "Dış kaynaklı aşırı yük",
+      "titleTemplate": "{source.name} kaynaklı yoğun veya büyük isteklerle {target.name} kesintisi",
+      "descriptionTemplate": "{target.name}, dış bir kaynaktan gelen isteklere açık. Hız, boyut ve eşzamanlılık limitleri yoksa hizmet kesintisi yaşanabilir.",
+      "defaultLikelihood": 3,
+      "defaultImpact": 3,
+      "ragQuery": "hız sınırı istek boyutu limiti toplu aktarım kotası",
+      "tags": ["api:API4"],
+      "when": { "all": [
+        { "fact": "element.crossesTrustBoundary", "op": "isTrue" },
+        { "fact": "source.zone", "op": "in", "value": ["INTERNET", "THIRD_PARTY"] }
+      ] }
+    }
+  ]
+}

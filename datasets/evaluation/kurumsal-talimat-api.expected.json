@@ -1,0 +1,13 @@
+{
+  "sample": "kurumsal-talimat-api",
+  "preparedBy": "Örnek analist referansı",
+  "expectedThreats": [
+    { "id": "E1", "stride": "INFORMATION_DISCLOSURE", "target": "Kurumsal Talimat API", "note": "Başka müşterinin talimatlarına erişim (BOLA)" },
+    { "id": "E2", "stride": "REPUDIATION", "target": "Kurumsal Müşteri Sistemi → Kurumsal Talimat API", "note": "Talimatın inkârı" },
+    { "id": "E3", "stride": "TAMPERING", "target": "Talimat Servisi → Çekirdek Bankacılık", "note": "Talimat bütünlüğü" },
+    { "id": "E4", "stride": "INFORMATION_DISCLOSURE", "target": "Talimat Servisi → Bildirim Servisi", "note": "HTTP ile şifresiz iletim" },
+    { "id": "E5", "stride": "TAMPERING", "target": "Talimat Servisi → Talimat Veritabanı", "note": "SQL enjeksiyonu" },
+    { "id": "E6", "stride": "INFORMATION_DISCLOSURE", "target": "Talimat Veritabanı", "note": "IBAN ve vergi numarası ifşası" },
+    { "id": "E7", "stride": "DENIAL_OF_SERVICE", "target": "Kurumsal Talimat API", "note": "Toplu talimatlarda limit" }
+  ]
+}

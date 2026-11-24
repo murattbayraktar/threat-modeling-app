@@ -1,0 +1,994 @@
+{
+  "schemaVersion": "1.0",
+  "system": {
+    "name": "Dijital Bankacılık Platformu (büyük örnek)",
+    "description": "Diyagram ölçek testi için sentetik model; gerçek sistem değildir."
+  },
+  "components": [
+    {
+      "id": "C1",
+      "name": "Bireysel Müşteri",
+      "type": "USER",
+      "technology": null,
+      "zone": "INTERNET",
+      "internetFacing": null,
+      "authentication": "UNKNOWN",
+      "dataClasses": [
+        "PII",
+        "CUSTOMER"
+      ],
+      "description": "Bireysel Müşteri",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C2",
+      "name": "Kurumsal Müşteri",
+      "type": "USER",
+      "technology": null,
+      "zone": "INTERNET",
+      "internetFacing": null,
+      "authentication": "UNKNOWN",
+      "dataClasses": [
+        "CUSTOMER",
+        "FINANCIAL"
+      ],
+      "description": "Kurumsal Müşteri",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C3",
+      "name": "Mobil Uygulama",
+      "type": "MOBILE_APP",
+      "technology": "iOS / Android",
+      "zone": "INTERNET",
+      "internetFacing": true,
+      "authentication": "OAUTH2",
+      "dataClasses": [
+        "PII",
+        "FINANCIAL",
+        "CREDENTIAL"
+      ],
+      "description": "Mobil Uygulama",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C4",
+      "name": "İnternet Şubesi",
+      "type": "WEB_APP",
+      "technology": "React",
+      "zone": "INTERNET",
+      "internetFacing": true,
+      "authentication": "OAUTH2",
+      "dataClasses": [
+        "PII",
+        "FINANCIAL",
+        "CREDENTIAL"
+      ],
+      "description": "İnternet Şubesi",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C5",
+      "name": "Ödeme Kuruluşu",
+      "type": "THIRD_PARTY_SYSTEM",
+      "technology": null,
+      "zone": "THIRD_PARTY",
+      "internetFacing": null,
+      "authentication": "MTLS",
+      "dataClasses": [
+        "FINANCIAL",
+        "CARD"
+      ],
+      "description": "Ödeme Kuruluşu",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C6",
+      "name": "Kredi Bürosu",
+      "type": "THIRD_PARTY_SYSTEM",
+      "technology": null,
+      "zone": "THIRD_PARTY",
+      "internetFacing": null,
+      "authentication": "MTLS",
+      "dataClasses": [
+        "PII",
+        "FINANCIAL"
+      ],
+      "description": "Kredi Bürosu",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C7",
+      "name": "SMS Sağlayıcı",
+      "type": "THIRD_PARTY_SYSTEM",
+      "technology": null,
+      "zone": "THIRD_PARTY",
+      "internetFacing": null,
+      "authentication": "API_KEY",
+      "dataClasses": [
+        "PII"
+      ],
+      "description": "SMS Sağlayıcı",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C8",
+      "name": "Push Bildirim Servisi",
+      "type": "THIRD_PARTY_SYSTEM",
+      "technology": null,
+      "zone": "THIRD_PARTY",
+      "internetFacing": null,
+      "authentication": "API_KEY",
+      "dataClasses": [
+        "PII"
+      ],
+      "description": "Push Bildirim Servisi",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C9",
+      "name": "Kimlik Doğrulama (NVİ)",
+      "type": "EXTERNAL_SYSTEM",
+      "technology": null,
+      "zone": "THIRD_PARTY",
+      "internetFacing": null,
+      "authentication": "MTLS",
+      "dataClasses": [
+        "PII"
+      ],
+      "description": "Kimlik Doğrulama (NVİ)",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C10",
+      "name": "WAF",
+      "type": "OTHER",
+      "technology": "F5",
+      "zone": "DMZ",
+      "internetFacing": true,
+      "authentication": "NONE",
+      "dataClasses": [],
+      "description": "WAF",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C11",
+      "name": "API Gateway",
+      "type": "API_GATEWAY",
+      "technology": "Kong",
+      "zone": "DMZ",
+      "internetFacing": true,
+      "authentication": "OAUTH2",
+      "dataClasses": [
+        "PII",
+        "FINANCIAL"
+      ],
+      "description": "API Gateway",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C12",
+      "name": "Kimlik Sağlayıcı",
+      "type": "IDENTITY_PROVIDER",
+      "technology": "Keycloak",
+      "zone": "DMZ",
+      "internetFacing": false,
+      "authentication": "OAUTH2",
+      "dataClasses": [
+        "CREDENTIAL",
+        "PII"
+      ],
+      "description": "Kimlik Sağlayıcı",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C13",
+      "name": "Dosya Transfer Sunucusu",
+      "type": "FILE_STORAGE",
+      "technology": "SFTP",
+      "zone": "DMZ",
+      "internetFacing": true,
+      "authentication": "BASIC",
+      "dataClasses": [
+        "FINANCIAL"
+      ],
+      "description": "Dosya Transfer Sunucusu",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C14",
+      "name": "Müşteri Servisi",
+      "type": "SERVICE",
+      "technology": "Spring Boot",
+      "zone": "INTERNAL",
+      "internetFacing": false,
+      "authentication": "JWT",
+      "dataClasses": [
+        "PII",
+        "CUSTOMER"
+      ],
+      "description": "Müşteri Servisi",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C15",
+      "name": "Hesap Servisi",
+      "type": "SERVICE",
+      "technology": "Spring Boot",
+      "zone": "INTERNAL",
+      "internetFacing": false,
+      "authentication": "JWT",
+      "dataClasses": [
+        "FINANCIAL"
+      ],
+      "description": "Hesap Servisi",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C16",
+      "name": "Ödeme Servisi",
+      "type": "SERVICE",
+      "technology": "Spring Boot",
+      "zone": "INTERNAL",
+      "internetFacing": false,
+      "authentication": "JWT",
+      "dataClasses": [
+        "FINANCIAL",
+        "CARD"
+      ],
+      "description": "Ödeme Servisi",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C17",
+      "name": "Kredi Servisi",
+      "type": "SERVICE",
+      "technology": "Spring Boot",
+      "zone": "INTERNAL",
+      "internetFacing": false,
+      "authentication": "JWT",
+      "dataClasses": [
+        "PII",
+        "FINANCIAL"
+      ],
+      "description": "Kredi Servisi",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C18",
+      "name": "Bildirim Servisi",
+      "type": "SERVICE",
+      "technology": "Spring Boot",
+      "zone": "INTERNAL",
+      "internetFacing": false,
+      "authentication": "SERVICE_ACCOUNT",
+      "dataClasses": [
+        "PII"
+      ],
+      "description": "Bildirim Servisi",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C19",
+      "name": "Dolandırıcılık Tespit",
+      "type": "SERVICE",
+      "technology": "Python",
+      "zone": "INTERNAL",
+      "internetFacing": false,
+      "authentication": "SERVICE_ACCOUNT",
+      "dataClasses": [
+        "FINANCIAL",
+        "PII"
+      ],
+      "description": "Dolandırıcılık Tespit",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C20",
+      "name": "Raporlama Batch",
+      "type": "BATCH_JOB",
+      "technology": "Spring Batch",
+      "zone": "INTERNAL",
+      "internetFacing": false,
+      "authentication": "SERVICE_ACCOUNT",
+      "dataClasses": [
+        "FINANCIAL"
+      ],
+      "description": "Raporlama Batch",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C21",
+      "name": "Çekirdek Bankacılık",
+      "type": "CORE_BANKING",
+      "technology": "Mainframe",
+      "zone": "INTERNAL",
+      "internetFacing": false,
+      "authentication": "SERVICE_ACCOUNT",
+      "dataClasses": [
+        "FINANCIAL",
+        "CUSTOMER"
+      ],
+      "description": "Çekirdek Bankacılık",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C22",
+      "name": "Olay Kuyruğu",
+      "type": "MESSAGE_QUEUE",
+      "technology": "Kafka",
+      "zone": "INTERNAL",
+      "internetFacing": false,
+      "authentication": "SERVICE_ACCOUNT",
+      "dataClasses": [
+        "FINANCIAL",
+        "PII"
+      ],
+      "description": "Olay Kuyruğu",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C23",
+      "name": "Müşteri Veritabanı",
+      "type": "DATABASE",
+      "technology": "Oracle",
+      "zone": "INTERNAL",
+      "internetFacing": false,
+      "authentication": "SERVICE_ACCOUNT",
+      "dataClasses": [
+        "PII",
+        "CUSTOMER"
+      ],
+      "description": "Müşteri Veritabanı",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C24",
+      "name": "Ödeme Veritabanı",
+      "type": "DATABASE",
+      "technology": "Oracle",
+      "zone": "INTERNAL",
+      "internetFacing": false,
+      "authentication": "SERVICE_ACCOUNT",
+      "dataClasses": [
+        "FINANCIAL",
+        "CARD"
+      ],
+      "description": "Ödeme Veritabanı",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C25",
+      "name": "Kredi Veritabanı",
+      "type": "DATABASE",
+      "technology": "PostgreSQL",
+      "zone": "INTERNAL",
+      "internetFacing": false,
+      "authentication": "SERVICE_ACCOUNT",
+      "dataClasses": [
+        "PII",
+        "FINANCIAL"
+      ],
+      "description": "Kredi Veritabanı",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C26",
+      "name": "Log / SIEM",
+      "type": "OTHER",
+      "technology": "Splunk",
+      "zone": "INTERNAL",
+      "internetFacing": false,
+      "authentication": "UNKNOWN",
+      "dataClasses": [
+        "INTERNAL"
+      ],
+      "description": "Log / SIEM",
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "C27",
+      "name": "Doküman Arşivi",
+      "type": "FILE_STORAGE",
+      "technology": "NAS",
+      "zone": "INTERNAL",
+      "internetFacing": false,
+      "authentication": "UNKNOWN",
+      "dataClasses": [
+        "PII"
+      ],
+      "description": "Doküman Arşivi",
+      "evidence": null,
+      "confidence": "HIGH"
+    }
+  ],
+  "dataFlows": [
+    {
+      "id": "F1",
+      "source": "C1",
+      "target": "C3",
+      "description": "Müşteri mobil uygulamayı kullanır",
+      "protocol": "UI",
+      "authentication": "NONE",
+      "encrypted": null,
+      "dataClasses": [
+        "PII"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F2",
+      "source": "C1",
+      "target": "C4",
+      "description": "Müşteri internet şubesine girer",
+      "protocol": "HTTPS",
+      "authentication": "NONE",
+      "encrypted": true,
+      "dataClasses": [
+        "PII"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F3",
+      "source": "C2",
+      "target": "C4",
+      "description": "Kurumsal kullanıcı toplu ödeme yükler",
+      "protocol": "HTTPS",
+      "authentication": "NONE",
+      "encrypted": true,
+      "dataClasses": [
+        "FINANCIAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F4",
+      "source": "C3",
+      "target": "C10",
+      "description": "Mobil istekler WAF'tan geçer",
+      "protocol": "HTTPS",
+      "authentication": "OAUTH2",
+      "encrypted": true,
+      "dataClasses": [
+        "PII",
+        "FINANCIAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F5",
+      "source": "C4",
+      "target": "C10",
+      "description": "Web istekleri WAF'tan geçer",
+      "protocol": "HTTPS",
+      "authentication": "OAUTH2",
+      "encrypted": true,
+      "dataClasses": [
+        "PII",
+        "FINANCIAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F6",
+      "source": "C10",
+      "target": "C11",
+      "description": "Filtrelenmiş istekler gateway'e iletilir",
+      "protocol": "HTTPS",
+      "authentication": "OAUTH2",
+      "encrypted": true,
+      "dataClasses": [
+        "PII",
+        "FINANCIAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F7",
+      "source": "C3",
+      "target": "C12",
+      "description": "Oturum açma ve token alma",
+      "protocol": "HTTPS",
+      "authentication": "OAUTH2",
+      "encrypted": true,
+      "dataClasses": [
+        "CREDENTIAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F8",
+      "source": "C4",
+      "target": "C12",
+      "description": "Oturum açma ve token alma",
+      "protocol": "HTTPS",
+      "authentication": "OAUTH2",
+      "encrypted": true,
+      "dataClasses": [
+        "CREDENTIAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F9",
+      "source": "C12",
+      "target": "C9",
+      "description": "Kimlik doğrulama sorgusu",
+      "protocol": "HTTPS",
+      "authentication": "MTLS",
+      "encrypted": true,
+      "dataClasses": [
+        "PII"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F10",
+      "source": "C11",
+      "target": "C14",
+      "description": "Müşteri bilgisi istekleri",
+      "protocol": "REST",
+      "authentication": "JWT",
+      "encrypted": true,
+      "dataClasses": [
+        "PII"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F11",
+      "source": "C11",
+      "target": "C15",
+      "description": "Hesap ve bakiye istekleri",
+      "protocol": "REST",
+      "authentication": "JWT",
+      "encrypted": true,
+      "dataClasses": [
+        "FINANCIAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F12",
+      "source": "C11",
+      "target": "C16",
+      "description": "Ödeme istekleri",
+      "protocol": "REST",
+      "authentication": "JWT",
+      "encrypted": true,
+      "dataClasses": [
+        "FINANCIAL",
+        "CARD"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F13",
+      "source": "C11",
+      "target": "C17",
+      "description": "Kredi başvuruları",
+      "protocol": "REST",
+      "authentication": "JWT",
+      "encrypted": true,
+      "dataClasses": [
+        "PII",
+        "FINANCIAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F14",
+      "source": "C14",
+      "target": "C23",
+      "description": "Müşteri kaydı okuma/yazma",
+      "protocol": "JDBC",
+      "authentication": "SERVICE_ACCOUNT",
+      "encrypted": null,
+      "dataClasses": [
+        "PII"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F15",
+      "source": "C15",
+      "target": "C21",
+      "description": "Hesap hareketleri sorgusu",
+      "protocol": "MQ",
+      "authentication": "SERVICE_ACCOUNT",
+      "encrypted": null,
+      "dataClasses": [
+        "FINANCIAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F16",
+      "source": "C16",
+      "target": "C24",
+      "description": "Ödeme kaydı",
+      "protocol": "JDBC",
+      "authentication": "SERVICE_ACCOUNT",
+      "encrypted": null,
+      "dataClasses": [
+        "FINANCIAL",
+        "CARD"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F17",
+      "source": "C16",
+      "target": "C5",
+      "description": "Ödeme talimatı iletimi",
+      "protocol": "HTTPS",
+      "authentication": "MTLS",
+      "encrypted": true,
+      "dataClasses": [
+        "FINANCIAL",
+        "CARD"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F18",
+      "source": "C16",
+      "target": "C19",
+      "description": "Ödeme risk skoru sorgusu",
+      "protocol": "REST",
+      "authentication": "SERVICE_ACCOUNT",
+      "encrypted": true,
+      "dataClasses": [
+        "FINANCIAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F19",
+      "source": "C16",
+      "target": "C21",
+      "description": "Muhasebe kaydı",
+      "protocol": "MQ",
+      "authentication": "SERVICE_ACCOUNT",
+      "encrypted": null,
+      "dataClasses": [
+        "FINANCIAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F20",
+      "source": "C16",
+      "target": "C22",
+      "description": "Ödeme olayı yayınlanır",
+      "protocol": "Kafka",
+      "authentication": "SERVICE_ACCOUNT",
+      "encrypted": null,
+      "dataClasses": [
+        "FINANCIAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F21",
+      "source": "C17",
+      "target": "C6",
+      "description": "Kredi skoru sorgusu",
+      "protocol": "HTTPS",
+      "authentication": "MTLS",
+      "encrypted": true,
+      "dataClasses": [
+        "PII",
+        "FINANCIAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F22",
+      "source": "C17",
+      "target": "C25",
+      "description": "Başvuru kaydı",
+      "protocol": "JDBC",
+      "authentication": "SERVICE_ACCOUNT",
+      "encrypted": null,
+      "dataClasses": [
+        "PII",
+        "FINANCIAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F23",
+      "source": "C17",
+      "target": "C27",
+      "description": "Başvuru belgeleri arşivlenir",
+      "protocol": "SMB",
+      "authentication": "UNKNOWN",
+      "encrypted": false,
+      "dataClasses": [
+        "PII"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F24",
+      "source": "C17",
+      "target": "C22",
+      "description": "Kredi olayı yayınlanır",
+      "protocol": "Kafka",
+      "authentication": "SERVICE_ACCOUNT",
+      "encrypted": null,
+      "dataClasses": [
+        "FINANCIAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F25",
+      "source": "C22",
+      "target": "C18",
+      "description": "Bildirim tetikleme",
+      "protocol": "Kafka",
+      "authentication": "SERVICE_ACCOUNT",
+      "encrypted": null,
+      "dataClasses": [
+        "PII"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F26",
+      "source": "C22",
+      "target": "C19",
+      "description": "Olay akışı analizi",
+      "protocol": "Kafka",
+      "authentication": "SERVICE_ACCOUNT",
+      "encrypted": null,
+      "dataClasses": [
+        "FINANCIAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F27",
+      "source": "C18",
+      "target": "C7",
+      "description": "SMS gönderimi",
+      "protocol": "HTTPS",
+      "authentication": "API_KEY",
+      "encrypted": true,
+      "dataClasses": [
+        "PII"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F28",
+      "source": "C18",
+      "target": "C8",
+      "description": "Push bildirim gönderimi",
+      "protocol": "HTTPS",
+      "authentication": "API_KEY",
+      "encrypted": true,
+      "dataClasses": [
+        "PII"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F29",
+      "source": "C20",
+      "target": "C24",
+      "description": "Günlük ödeme verisi okunur",
+      "protocol": "JDBC",
+      "authentication": "SERVICE_ACCOUNT",
+      "encrypted": null,
+      "dataClasses": [
+        "FINANCIAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F30",
+      "source": "C20",
+      "target": "C13",
+      "description": "Mutabakat dosyası bırakılır",
+      "protocol": "SFTP",
+      "authentication": "BASIC",
+      "encrypted": true,
+      "dataClasses": [
+        "FINANCIAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F31",
+      "source": "C13",
+      "target": "C5",
+      "description": "Ödeme kuruluşu mutabakat dosyasını alır",
+      "protocol": "SFTP",
+      "authentication": "BASIC",
+      "encrypted": true,
+      "dataClasses": [
+        "FINANCIAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F32",
+      "source": "C11",
+      "target": "C26",
+      "description": "Erişim logları",
+      "protocol": "Syslog",
+      "authentication": "UNKNOWN",
+      "encrypted": false,
+      "dataClasses": [
+        "INTERNAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F33",
+      "source": "C16",
+      "target": "C26",
+      "description": "Uygulama logları",
+      "protocol": "Syslog",
+      "authentication": "UNKNOWN",
+      "encrypted": false,
+      "dataClasses": [
+        "INTERNAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F34",
+      "source": "C12",
+      "target": "C26",
+      "description": "Kimlik olay logları",
+      "protocol": "Syslog",
+      "authentication": "UNKNOWN",
+      "encrypted": false,
+      "dataClasses": [
+        "INTERNAL"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    },
+    {
+      "id": "F35",
+      "source": "C14",
+      "target": "C21",
+      "description": "Müşteri ana verisi senkronizasyonu",
+      "protocol": "MQ",
+      "authentication": "SERVICE_ACCOUNT",
+      "encrypted": null,
+      "dataClasses": [
+        "CUSTOMER"
+      ],
+      "evidence": null,
+      "confidence": "HIGH"
+    }
+  ],
+  "trustBoundaries": [
+    {
+      "id": "TB-INTERNET",
+      "zone": "INTERNET",
+      "componentIds": [
+        "C1",
+        "C2",
+        "C3",
+        "C4"
+      ]
+    },
+    {
+      "id": "TB-THIRD_PARTY",
+      "zone": "THIRD_PARTY",
+      "componentIds": [
+        "C5",
+        "C6",
+        "C7",
+        "C8",
+        "C9"
+      ]
+    },
+    {
+      "id": "TB-DMZ",
+      "zone": "DMZ",
+      "componentIds": [
+        "C10",
+        "C11",
+        "C12",
+        "C13"
+      ]
+    },
+    {
+      "id": "TB-INTERNAL",
+      "zone": "INTERNAL",
+      "componentIds": [
+        "C14",
+        "C15",
+        "C16",
+        "C17",
+        "C18",
+        "C19",
+        "C20",
+        "C21",
+        "C22",
+        "C23",
+        "C24",
+        "C25",
+        "C26",
+        "C27"
+      ]
+    }
+  ],
+  "missingInformation": [
+    {
+      "question": "Log/SIEM akışlarında taşıma şifrelemesi var mı?",
+      "relatedElementId": "C26"
+    }
+  ],
+  "assumptions": [
+    "Sentetik örnek: ölçek testi için hazırlanmıştır."
+  ]
+}

@@ -1,0 +1,18 @@
+MOBİL ŞUBE RANDEVU SERVİSİ - TASARIM NOTU
+
+1. GENEL
+Müşterilerin mobil uygulama üzerinden şube randevusu alabilmesi sağlanacaktır. Randevu hatırlatmaları SMS ile gönderilecektir.
+
+2. BİLEŞENLER
+- Mobil Uygulama: Müşterilerin kullandığı mobil bankacılık uygulaması, internet üzerinden erişilir.
+- Randevu API: Mobil uygulamanın çağırdığı REST API; JWT ile kimlik doğrulama yapılır.
+- Randevu Veritabanı: Müşteri adı, telefon numarası ve şube bilgisinin tutulduğu veritabanı (iç ağ).
+- SMS Servisi: Üçüncü taraf SMS sağlayıcısı.
+
+3. VERİ AKIŞLARI
+- Mobil Uygulama → Randevu API: Randevu talepleri HTTPS ile JWT kullanılarak iletilir.
+- Randevu API → Randevu Veritabanı: Randevu ve müşteri iletişim bilgileri yazılır.
+- Randevu API → SMS Servisi: Hatırlatma mesajları HTTPS ile API anahtarı kullanılarak gönderilir.
+
+4. NOTLAR
+Sistem şeması ayrıca görsel olarak eklenmiştir (sistem_semasi.png).

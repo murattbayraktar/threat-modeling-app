@@ -1,0 +1,13 @@
+{
+  "_açıklama": "Bu dosyayı webllm-config.json adıyla kopyalayıp model dosyalarının kurum içi adreslerini yazın. Dosya varsa tarayıcı LLM'i modelleri buradan indirir (internete çıkmaz).",
+  "model_list": [
+    {
+      "model": "https://intranet.bank.local/webllm/Qwen2.5-3B-Instruct-q4f16_1-MLC",
+      "model_id": "Qwen2.5-3B-Instruct-q4f16_1-MLC",
+      "model_lib": "https://intranet.bank.local/webllm/libs/Qwen2.5-3B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm",
+      "vram_required_MB": 2504,
+      "low_resource_required": true,
+      "overrides": { "context_window_size": 8192 }
+    }
+  ]
+}

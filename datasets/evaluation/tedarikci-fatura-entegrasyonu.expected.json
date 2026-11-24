@@ -1,0 +1,15 @@
+{
+  "sample": "tedarikci-fatura-entegrasyonu",
+  "preparedBy": "Örnek analist referansı",
+  "expectedThreats": [
+    { "id": "E1", "stride": "SPOOFING", "target": "API Gateway → Fatura Entegrasyon Servisi", "note": "Gateway ile servis arasında kimlik doğrulama yok" },
+    { "id": "E2", "stride": "TAMPERING", "target": "Fatura Entegrasyon Servisi → Fatura Veritabanı", "note": "SQL enjeksiyonu" },
+    { "id": "E3", "stride": "INFORMATION_DISCLOSURE", "target": "Fatura Veritabanı", "note": "IBAN ve vergi numarasının ifşası" },
+    { "id": "E4", "stride": "TAMPERING", "target": "Ek Belge Deposu", "note": "Zararlı PDF eki" },
+    { "id": "E5", "stride": "TAMPERING", "target": "Onay İş Akışı → Muhasebe Sistemi", "note": "Ödeme talimatının değiştirilmesi" },
+    { "id": "E6", "stride": "REPUDIATION", "target": "Onay İş Akışı", "note": "Onay adımlarının izlenememesi" },
+    { "id": "E7", "stride": "DENIAL_OF_SERVICE", "target": "Tedarikçi ERP → API Gateway", "note": "Toplu gönderimde limit yok" },
+    { "id": "E8", "stride": "SPOOFING", "target": "Tedarikçi Portalı", "note": "Parola ile giriş, MFA yok" },
+    { "id": "E9", "stride": "INFORMATION_DISCLOSURE", "target": "Tedarikçi Portalı", "note": "Başka tedarikçilerin faturalarına erişim" }
+  ]
+}

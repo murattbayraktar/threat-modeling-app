@@ -1,0 +1,21 @@
+{
+  "version": "risk-v1.0",
+  "description": "Örnek risk metodolojisi: olasılık × etki (1–5). Eşikler örnektir; kurumun risk metodolojisine göre güvenlik ekibi tarafından güncellenmelidir.",
+  "scale": { "min": 1, "max": 5 },
+  "formula": "LIKELIHOOD_X_IMPACT",
+  "baseline": "RULE_DEFAULTS_THEN_STRIDE_DEFAULTS",
+  "levels": [
+    { "id": "LOW", "label": "Düşük", "min": 1, "max": 4 },
+    { "id": "MEDIUM", "label": "Orta", "min": 5, "max": 9 },
+    { "id": "HIGH", "label": "Yüksek", "min": 10, "max": 16 },
+    { "id": "CRITICAL", "label": "Kritik", "min": 17, "max": 25 }
+  ],
+  "strideDefaults": {
+    "SPOOFING": { "likelihood": 3, "impact": 4 },
+    "TAMPERING": { "likelihood": 3, "impact": 4 },
+    "REPUDIATION": { "likelihood": 2, "impact": 3 },
+    "INFORMATION_DISCLOSURE": { "likelihood": 3, "impact": 4 },
+    "DENIAL_OF_SERVICE": { "likelihood": 3, "impact": 3 },
+    "ELEVATION_OF_PRIVILEGE": { "likelihood": 3, "impact": 4 }
+  }
+}

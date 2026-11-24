@@ -13,9 +13,26 @@ import java.util.Map;
  */
 public record SystemSettings(Llm llm, Embedding embedding, BrowserLlm browserLlm, Extraction extraction, Pipeline pipeline) {
 
-    /** Sunucu LLM'i. taskModels: adım bazında model (boşsa varsayılan model kullanılır). */
+    /**
+     * Sunucu LLM'i. taskModels: adım bazında model (boşsa varsayılan model kullanılır).
+     * taskConnections: adım bazında farklı bir bağlantı (adres + anahtar); boşsa varsayılan bağlantı kullanılır.
+     */
     public record Llm(String provider, String baseUrl, String apiKey, String model, int timeoutSeconds,
-                      String structuredOutputMode, int maxAttempts, Map<String, String> taskModels) {
+                      String structuredOutputMode, int maxAttempts, Map<String, String> taskModels,
+                      Map<String, TaskConnection> taskConnections) {
+        public Llm {
+            taskModels = taskModels == null ? new LinkedHashMap<>() : taskModels;
+            taskConnections = taskConnections == null ? new LinkedHashMap<>() : taskConnections;
+        }
+
+        public Llm(String provider, String baseUrl, String apiKey, String model, int timeoutSeconds,
+                   String structuredOutputMode, int maxAttempts, Map<String, String> taskModels) {
+            this(provider, baseUrl, apiKey, model, timeoutSeconds, structuredOutputMode, maxAttempts, taskModels, new LinkedHashMap<>());
+        }
+    }
+
+    /** Bir adımın varsayılandan farklı LLM bağlantısı. baseUrl boşsa varsayılan adres kullanılır. */
+    public record TaskConnection(String baseUrl, String apiKey) {
     }
 
     /** RAG için isteğe bağlı embedding servisi. Kapalıysa yalnızca BM25 araması yapılır. */

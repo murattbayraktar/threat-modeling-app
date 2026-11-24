@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tm.bank.local/contracts/system-model.schema.json",
+  "title": "SystemModel",
+  "description": "Dokümanlardan çıkarılan ve analist tarafından onaylanan standart sistem modeli. LLM çıktısı (model-extraction) bu yapıya dönüştürülür; elementKind, crossesTrustBoundary ve trustBoundaries alanlarını backend hesaplar.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "system", "components", "dataFlows", "trustBoundaries", "missingInformation", "assumptions"],
+  "properties": {
+    "schemaVersion": { "type": "string", "enum": ["1.0"] },
+    "system": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "description"],
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "components": { "type": "array", "items": { "$ref": "#/$defs/component" } },
+    "dataFlows": { "type": "array", "items": { "$ref": "#/$defs/dataFlow" } },
+    "trustBoundaries": { "type": "array", "items": { "$ref": "#/$defs/trustBoundary" } },
+    "missingInformation": { "type": "array", "items": { "$ref": "#/$defs/missingInformation" } },
+    "assumptions": { "type": "array", "items": { "type": "string" } }
+  },
+  "$defs": {
+    "componentType": {
+      "type": "string",
+      "enum": ["USER", "EXTERNAL_SYSTEM", "THIRD_PARTY_SYSTEM", "WEB_APP", "MOBILE_APP", "API_GATEWAY", "API", "SERVICE", "BATCH_JOB", "DATABASE", "FILE_STORAGE", "MESSAGE_QUEUE", "CORE_BANKING", "IDENTITY_PROVIDER", "OTHER"]
+    },
+    "zone": { "type": "string", "enum": ["INTERNET", "DMZ", "INTERNAL", "THIRD_PARTY", "UNKNOWN"] },
+    "authentication": { "type": "string", "enum": ["NONE", "JWT", "OAUTH2", "MTLS", "SSO", "API_KEY", "BASIC", "SERVICE_ACCOUNT", "UNKNOWN"] },
+    "dataClass": { "type": "string", "enum": ["PUBLIC", "INTERNAL", "PII", "CUSTOMER", "FINANCIAL", "CARD", "CREDENTIAL"] },
+    "confidence": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"] },
+    "elementKind": { "type": "string", "enum": ["EXTERNAL_ENTITY", "PROCESS", "DATA_STORE"] },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["documentId", "section", "quote"],
+      "properties": {
+        "documentId": { "type": "string", "description": "Ayrıştırılmış doküman kimliği, ör. D1" },
+        "section": { "type": "string", "description": "Bölüm kimliği veya başlığı, ör. 4.2" },
+        "quote": { "type": "string", "description": "Dokümandan kısa, birebir alıntı" }
+      }
+    },
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "type", "technology", "zone", "internetFacing", "authentication", "dataClasses", "description", "evidence", "confidence"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^C[0-9]+$" },
+        "name": { "type": "string" },
+        "type": { "$ref": "#/$defs/componentType" },
+        "technology": { "type": ["string", "null"] },
+        "zone": { "$ref": "#/$defs/zone" },
+        "internetFacing": { "type": ["boolean", "null"] },
+        "authentication": { "$ref": "#/$defs/authentication" },
+        "dataClasses": { "type": "array", "items": { "$ref": "#/$defs/dataClass" } },
+        "description": { "type": "string" },
+        "evidence": { "$ref": "#/$defs/evidence" },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "elementKind": { "$ref": "#/$defs/elementKind", "description": "Backend hesaplar" }
+      }
+    },
+    "dataFlow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "source", "target", "description", "protocol", "authentication", "encrypted", "dataClasses", "evidence", "confidence"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^F[0-9]+$" },
+        "source": { "type": "string", "description": "Kaynak bileşen id" },
+        "target": { "type": "string", "description": "Hedef bileşen id" },
+        "description": { "type": "string" },
+        "protocol": { "type": ["string", "null"] },
+        "authentication": { "$ref": "#/$defs/authentication" },
+        "encrypted": { "type": ["boolean", "null"] },
+        "dataClasses": { "type": "array", "items": { "$ref": "#/$defs/dataClass" } },
+        "evidence": { "$ref": "#/$defs/evidence" },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "crossesTrustBoundary": { "type": ["boolean", "null"], "description": "Backend hesaplar: kaynak ve hedef bölgeleri farklı mı" }
+      }
+    },
+    "trustBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "zone", "componentIds"],
+      "properties": {
+        "id": { "type": "string" },
+        "zone": { "$ref": "#/$defs/zone" },
+        "componentIds": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "missingInformation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["question", "relatedElementId"],
+      "properties": {
+        "question": { "type": "string" },
+        "relatedElementId": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

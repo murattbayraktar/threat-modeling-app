@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tm.bank.local/contracts/llm/threat-generation.output.schema.json",
+  "title": "ThreatGenerationOutput",
+  "description": "LLM structured output: kural motorunun ürettiği aday tehditlerin projeye uyarlanması ve kaynaklı mitigation önerileri. suggestedLikelihood/suggestedImpact yalnızca AI önerisidir; sistem skoru risk motorunca ayrıca hesaplanır.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["threats"],
+  "properties": {
+    "threats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["candidateId", "applicable", "notApplicableReason", "title", "description", "attackScenario", "strideCategory", "targetId", "suggestedLikelihood", "suggestedImpact", "riskRationale", "mitigations", "sourceIds", "confidence", "assumptions"],
+        "properties": {
+          "candidateId": { "type": ["string", "null"], "description": "Uyarlanan aday tehdidin id'si; kuralların yakalamadığı ek öneride null" },
+          "applicable": { "type": "boolean" },
+          "notApplicableReason": { "type": ["string", "null"] },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "attackScenario": { "type": "string" },
+          "strideCategory": { "type": "string", "enum": ["SPOOFING", "TAMPERING", "REPUDIATION", "INFORMATION_DISCLOSURE", "DENIAL_OF_SERVICE", "ELEVATION_OF_PRIVILEGE"] },
+          "targetId": { "type": "string", "description": "Sistem modelindeki bileşen (C..) veya akış (F..) id" },
+          "suggestedLikelihood": { "type": "integer", "enum": [1, 2, 3, 4, 5] },
+          "suggestedImpact": { "type": "integer", "enum": [1, 2, 3, 4, 5] },
+          "riskRationale": { "type": "string" },
+          "mitigations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["title", "description", "sourceIds"],
+              "properties": {
+                "title": { "type": "string" },
+                "description": { "type": "string" },
+                "sourceIds": { "type": "array", "items": { "type": "string" }, "description": "Yalnızca verilen KAYNAKLAR listesindeki id'ler" }
+              }
+            }
+          },
+          "sourceIds": { "type": "array", "items": { "type": "string" } },
+          "confidence": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"] },
+          "assumptions": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

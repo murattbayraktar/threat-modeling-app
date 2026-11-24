@@ -52,7 +52,10 @@ public final class SettingsService {
     public record Policy(boolean encryptionEnabled, boolean blockPublicEndpoints, List<String> internalHostSuffixes) {
     }
 
-    public record TestResult(String target, String model, boolean ok, String message, long durationMs) {
+    public record TestResult(String target, String model, boolean ok, String message, long durationMs, String scope) {
+        public TestResult(String target, String model, boolean ok, String message, long durationMs) {
+            this(target, model, ok, message, durationMs, "");
+        }
     }
 
     private final ReviewStore store;
@@ -96,7 +99,8 @@ public final class SettingsService {
         Map<String, SecretStatus> secrets = new LinkedHashMap<>();
         secrets.put("llm.apiKey", status(s.llm().apiKey()));
         secrets.put("embedding.apiKey", status(s.embedding().apiKey()));
-        SystemSettings masked = s.withLlm(withKey(s.llm(), "")).withEmbedding(withKey(s.embedding(), ""));
+        s.llm().taskConnections().forEach((t, c) -> secrets.put("llm.task." + t + ".apiKey", status(c.apiKey())));
+        SystemSettings masked = s.withLlm(mapKeys(withKey(s.llm(), ""), k -> "")).withEmbedding(withKey(s.embedding(), ""));
         return new View(masked, secrets, new Policy(cipher.enabled(), policy.blockPublic(), policy.internalSuffixes()), source);
     }
 
@@ -110,7 +114,7 @@ public final class SettingsService {
         validate(resolved);
         String summary = diff(current, resolved);
         if (summary.isEmpty()) return view();
-        SystemSettings toStore = resolved.withLlm(withKey(resolved.llm(), cipher.encrypt(resolved.llm().apiKey())))
+        SystemSettings toStore = resolved.withLlm(mapKeys(withKey(resolved.llm(), cipher.encrypt(resolved.llm().apiKey())), cipher::encrypt))
                 .withEmbedding(withKey(resolved.embedding(), cipher.encrypt(resolved.embedding().apiKey())));
         store.putSetting(KEY, Json.write(toStore), actor, summary);
         current = resolved;
@@ -121,7 +125,7 @@ public final class SettingsService {
 
     /** Kaydedilmiş değerleri silip application.yml değerlerine döner. */
     public View resetToDefaults(String actor) {
-        store.putSetting(KEY, Json.write(initial.withLlm(withKey(initial.llm(), cipher.encrypt(initial.llm().apiKey())))
+        store.putSetting(KEY, Json.write(initial.withLlm(mapKeys(withKey(initial.llm(), cipher.encrypt(initial.llm().apiKey())), cipher::encrypt))
                 .withEmbedding(withKey(initial.embedding(), cipher.encrypt(initial.embedding().apiKey())))), actor, "Varsayılan değerlere dönüldü");
         current = initial;
         source = "application.yml";
@@ -151,27 +155,47 @@ public final class SettingsService {
             out.add(new TestResult("llm", "heuristic-mock-v1", true, "Mock sağlayıcı ağa çıkmaz; her zaman kullanılabilir.", 0));
             return out;
         }
-        List<String> models = new ArrayList<>();
-        models.add(l.model());
-        l.taskModels().values().stream().filter(m -> !blank(m) && !models.contains(m.strip())).forEach(m -> models.add(m.strip()));
-        for (String model : models) {
+        record Probe(String scope, Effective eff) { }
+        List<Probe> probes = new ArrayList<>();
+        probes.add(new Probe("Varsayılan", effective(l, null)));
+        for (LlmTask t : LlmTask.values()) {
+            Effective e = effective(l, t.name());
+            if (probes.stream().noneMatch(p -> p.eff().sameAs(e))) probes.add(new Probe(t.name(), e));
+        }
+        for (Probe pr : probes) {
+            Effective e = pr.eff();
             long t0 = System.currentTimeMillis();
             try {
-                policy.check("LLM adresi", l.baseUrl());
-                LlmClient client = openAi(l, model);
+                policy.check("LLM adresi", e.baseUrl());
+                LlmClient client = openAi(l, e.baseUrl(), e.apiKey(), e.model());
                 JsonNode schema = Json.tree("{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"ok\",\"model\"],"
                         + "\"properties\":{\"ok\":{\"type\":\"boolean\"},\"model\":{\"type\":\"string\"}}}");
                 LlmResponse res = client.complete(new LlmRequest(null, "connection-test", "Sen bir bağlantı testi yanıtlayıcısısın.",
                         "Yalnızca şu JSON'u döndür: {\"ok\": true, \"model\": \"<model adın>\"}", "connection_test", schema, 0, 64,
                         Json.MAPPER.createObjectNode()));
                 StructuredOutput.Result r = StructuredOutput.parse(res.text(), schema);
-                out.add(new TestResult("llm", model, true, r.valid() ? "Yanıt alındı, JSON şemasına uygun (" + l.structuredOutputMode() + ")"
-                        : "Yanıt alındı ama şemaya uymadı: " + String.join("; ", r.errors()), res.durationMs()));
+                out.add(new TestResult("llm", e.model(), true, r.valid() ? "Yanıt alındı, JSON şemasına uygun (" + l.structuredOutputMode() + ")"
+                        : "Yanıt alındı ama şemaya uymadı: " + String.join("; ", r.errors()), res.durationMs(), pr.scope()));
             } catch (Exception ex) {
-                out.add(new TestResult("llm", model, false, message(ex), System.currentTimeMillis() - t0));
+                out.add(new TestResult("llm", e.model(), false, message(ex), System.currentTimeMillis() - t0, pr.scope()));
             }
         }
         return out;
+    }
+
+    /**
+     * Taslaktaki bağlantıdan (task verilmişse o adımın bağlantısından) tanımlı modelleri getirir.
+     * Kaydedilmemiş adres ve anahtarla çalışır; anahtar boşsa kayıtlı anahtar kullanılır.
+     */
+    public ModelCatalog.Result listModels(SystemSettings draft, String task) throws Exception {
+        SystemSettings s = resolveSecrets(normalize(draft));
+        if (!blank(task)) LlmTask.valueOf(task);
+        Effective e = effective(s.llm(), blank(task) ? null : task);
+        if (blank(e.baseUrl())) throw new IllegalArgumentException("Önce adres girilmeli");
+        policy.check("LLM adresi", e.baseUrl());
+        List<String> models = ModelCatalog.fetch(e.baseUrl(), e.apiKey());
+        String host = java.net.URI.create(e.baseUrl().strip()).getHost();
+        return new ModelCatalog.Result(models, host, !policy.isInternal(host));
     }
 
     // ------------------------------------------------------------------------------------------------ iç işler
@@ -182,9 +206,10 @@ public final class SettingsService {
             llm.replace(new MockLlmClient(), Map.of());
         } else {
             Map<LlmTask, LlmClient> perTask = new EnumMap<>(LlmTask.class);
-            l.taskModels().forEach((task, model) -> {
-                if (!blank(model) && !model.strip().equals(l.model())) perTask.put(LlmTask.valueOf(task), openAi(l, model.strip()));
-            });
+            for (LlmTask t : LlmTask.values()) {
+                Effective eff = effective(l, t.name());
+                if (!eff.sameAs(effective(l, null))) perTask.put(t, openAi(l, eff.baseUrl(), eff.apiKey(), eff.model()));
+            }
             llm.replace(openAi(l, l.model()), perTask);
         }
         SystemSettings.Embedding e = s.embedding();
@@ -195,8 +220,43 @@ public final class SettingsService {
     }
 
     private static LlmClient openAi(SystemSettings.Llm l, String model) {
-        return new OpenAiCompatibleLlmClient(l.baseUrl(), l.apiKey(), model, Duration.ofSeconds(l.timeoutSeconds()),
+        return openAi(l, l.baseUrl(), l.apiKey(), model);
+    }
+
+    private static LlmClient openAi(SystemSettings.Llm l, String baseUrl, String apiKey, String model) {
+        return new OpenAiCompatibleLlmClient(baseUrl, apiKey, model, Duration.ofSeconds(l.timeoutSeconds()),
                 OpenAiCompatibleLlmClient.StructuredOutputMode.valueOf(l.structuredOutputMode()));
+    }
+
+    /** Bir adımın fiilen kullanacağı bağlantı + model. task=null varsayılandır. */
+    private record Effective(String baseUrl, String apiKey, String model) {
+        boolean sameAs(Effective o) {
+            return baseUrl.equals(o.baseUrl) && apiKey.equals(o.apiKey) && model.equals(o.model);
+        }
+    }
+
+    /**
+     * Adımın kendi adresi varsa kendi anahtarını kullanır; varsayılan anahtar başka bir hosta gönderilmez.
+     * Yalnızca anahtar verilmişse varsayılan adresle o anahtar kullanılır.
+     */
+    private static Effective effective(SystemSettings.Llm l, String task) {
+        SystemSettings.TaskConnection c = task == null ? null : l.taskConnections().get(task);
+        String model = task == null || blank(l.taskModels().get(task)) ? l.model() : l.taskModels().get(task).strip();
+        if (c == null) return new Effective(l.baseUrl(), l.apiKey() == null ? "" : l.apiKey(), model);
+        boolean ownUrl = !blank(c.baseUrl());
+        String key = !blank(c.apiKey()) ? c.apiKey() : ownUrl ? "" : (l.apiKey() == null ? "" : l.apiKey());
+        return new Effective(ownUrl ? c.baseUrl() : l.baseUrl(), key, model);
+    }
+
+    private static SystemSettings.Llm mapKeys(SystemSettings.Llm l, java.util.function.UnaryOperator<String> f) {
+        Map<String, SystemSettings.TaskConnection> m = new LinkedHashMap<>();
+        l.taskConnections().forEach((t, c) -> m.put(t, new SystemSettings.TaskConnection(c.baseUrl(), blank(c.apiKey()) ? "" : f.apply(c.apiKey()))));
+        return withConns(l, m);
+    }
+
+    private static SystemSettings.Llm withConns(SystemSettings.Llm l, Map<String, SystemSettings.TaskConnection> conns) {
+        return new SystemSettings.Llm(l.provider(), l.baseUrl(), l.apiKey(), l.model(), l.timeoutSeconds(), l.structuredOutputMode(),
+                l.maxAttempts(), l.taskModels(), conns);
     }
 
     private java.util.Optional<SystemSettings> loadStored() {
@@ -206,7 +266,7 @@ public final class SettingsService {
             deepMerge(merged, Json.tree(json));
             SystemSettings s = Json.MAPPER.convertValue(merged, SystemSettings.class);
             source = "veritabanı";
-            return normalize(s.withLlm(withKey(s.llm(), cipher.decrypt(s.llm().apiKey())))
+            return normalize(s.withLlm(mapKeys(withKey(s.llm(), cipher.decrypt(s.llm().apiKey())), cipher::decrypt))
                     .withEmbedding(withKey(s.embedding(), cipher.decrypt(s.embedding().apiKey()))));
         });
     }
@@ -214,13 +274,19 @@ public final class SettingsService {
     private static void deepMerge(ObjectNode target, JsonNode overlay) {
         overlay.fields().forEachRemaining(e -> {
             JsonNode existing = target.get(e.getKey());
-            if (existing instanceof ObjectNode o && e.getValue().isObject() && !"taskModels".equals(e.getKey())) deepMerge(o, e.getValue());
+            if (existing instanceof ObjectNode o && e.getValue().isObject() && !"taskModels".equals(e.getKey()) && !"taskConnections".equals(e.getKey())) deepMerge(o, e.getValue());
             else if (!e.getValue().isNull()) target.set(e.getKey(), e.getValue());
         });
     }
 
     private SystemSettings resolveSecrets(SystemSettings d) {
-        return d.withLlm(withKey(d.llm(), secret(d.llm().apiKey(), current.llm().apiKey())))
+        SystemSettings.Llm l = withKey(d.llm(), secret(d.llm().apiKey(), current.llm().apiKey()));
+        Map<String, SystemSettings.TaskConnection> conns = new LinkedHashMap<>();
+        l.taskConnections().forEach((t, c) -> {
+            SystemSettings.TaskConnection old = current.llm().taskConnections().get(t);
+            conns.put(t, new SystemSettings.TaskConnection(c.baseUrl(), secret(c.apiKey(), old == null ? "" : old.apiKey())));
+        });
+        return d.withLlm(withConns(l, conns))
                 .withEmbedding(withKey(d.embedding(), secret(d.embedding().apiKey(), current.embedding().apiKey())));
     }
 
@@ -237,8 +303,13 @@ public final class SettingsService {
             String v = l.taskModels() == null ? null : l.taskModels().get(t.name());
             tm.put(t.name(), v == null ? "" : v.strip());
         }
+        Map<String, SystemSettings.TaskConnection> tc = new LinkedHashMap<>();
+        for (LlmTask t : LlmTask.values()) {
+            SystemSettings.TaskConnection c = l.taskConnections() == null ? null : l.taskConnections().get(t.name());
+            if (c != null) tc.put(t.name(), new SystemSettings.TaskConnection(trim(c.baseUrl()), c.apiKey()));
+        }
         SystemSettings.Llm nl = new SystemSettings.Llm(trim(l.provider()), trim(l.baseUrl()), l.apiKey(), trim(l.model()),
-                l.timeoutSeconds(), trim(l.structuredOutputMode()), l.maxAttempts(), tm);
+                l.timeoutSeconds(), trim(l.structuredOutputMode()), l.maxAttempts(), tm, tc);
         SystemSettings.Embedding e = s.embedding();
         SystemSettings.Embedding ne = new SystemSettings.Embedding(e.enabled(), trim(e.baseUrl()), e.apiKey(), trim(e.model()));
         SystemSettings.Extraction x = s.extraction();
@@ -260,6 +331,9 @@ public final class SettingsService {
             if (blank(l.baseUrl())) errors.add("LLM adresi zorunlu");
             if (blank(l.model())) errors.add("LLM model adı zorunlu");
             check(errors, "LLM adresi", l.baseUrl());
+            l.taskConnections().forEach((t, c) -> {
+                if (!blank(c.baseUrl())) check(errors, "Adım bağlantısı (" + t + ")", c.baseUrl());
+            });
         }
         SystemSettings.Embedding e = s.embedding();
         if (e.enabled()) {
@@ -336,7 +410,7 @@ public final class SettingsService {
 
     private static SystemSettings.Llm withKey(SystemSettings.Llm l, String key) {
         return new SystemSettings.Llm(l.provider(), l.baseUrl(), key, l.model(), l.timeoutSeconds(), l.structuredOutputMode(),
-                l.maxAttempts(), l.taskModels());
+                l.maxAttempts(), l.taskModels(), l.taskConnections());
     }
 
     private static SystemSettings.Embedding withKey(SystemSettings.Embedding e, String key) {

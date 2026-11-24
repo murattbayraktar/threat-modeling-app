@@ -1,0 +1,8 @@
+{
+  "title": "Kurumsal talimat API'si",
+  "businessUnit": "Ödeme Sistemleri",
+  "projectType": "NEW_APPLICATION",
+  "dataClassification": "GIZLI",
+  "owner": "Proje sahibi (örnek)",
+  "answers": { "internetFacing": true, "personalData": true, "thirdParty": true, "authMethod": "OAUTH2" }
+}

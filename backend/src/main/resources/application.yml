@@ -60,8 +60,9 @@ tm:
   security:
     # API anahtarlarını veritabanında AES-256-GCM ile şifrelemek için parola. Canlıda kasadan ortam değişkeniyle verin.
     settings-encryption-key: ${TM_SETTINGS_KEY:}
-    # Bulut erişimi yasak: ekrandan yalnızca localhost, özel IP'ler ve aşağıdaki iç alan adları girilebilir.
-    block-public-endpoints: true
+    # PoC: dış adreslere (ör. api.openai.com) izin verilir; arayüzde "dış erişim" olarak işaretlenir.
+    # true yapılırsa ekrandan yalnızca localhost, özel IP'ler ve aşağıdaki iç alan adları girilebilir (canlı için önerilir).
+    block-public-endpoints: false
     internal-host-suffixes:
       - .bank.local
       - .local

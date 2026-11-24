@@ -1,0 +1,11 @@
+{
+  "sample": "mobil-sube-randevu",
+  "preparedBy": "Örnek analist referansı",
+  "expectedThreats": [
+    { "id": "E1", "stride": "DENIAL_OF_SERVICE", "target": "Randevu API", "note": "Hız sınırı yok, kapasite doldurma" },
+    { "id": "E2", "stride": "INFORMATION_DISCLOSURE", "target": "Randevu API", "note": "Başka müşterinin randevusunu görme" },
+    { "id": "E3", "stride": "INFORMATION_DISCLOSURE", "target": "Randevu Veritabanı", "note": "Telefon ve ad bilgisinin ifşası" },
+    { "id": "E4", "stride": "TAMPERING", "target": "Randevu API → Randevu Veritabanı", "note": "SQL enjeksiyonu" },
+    { "id": "E5", "stride": "SPOOFING", "target": "SMS Servisi", "note": "Sahte SMS sağlayıcı / anahtar sızıntısı" }
+  ]
+}
